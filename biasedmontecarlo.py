@@ -66,9 +66,9 @@ def MonteCarlo(N, iterations, point_list):
     segment_1_points, segment_2_points, segment_3_points = point_list
 
     # implement bias based on the fraction of correct points
-    segment_1_fraction = 0.5
-    segment_2_fraction = 0.5
-    segment_3_fraction = 0.5
+    segment_1_fraction = 0.077 #28
+    segment_2_fraction = 0.278 #101
+    segment_3_fraction = 1 - segment_1_fraction - segment_2_fraction #234
 
     surface_1 = 0
     surface_2 = 0
@@ -77,7 +77,7 @@ def MonteCarlo(N, iterations, point_list):
     for _ in range(iterations):
         N_1 = round(segment_1_fraction * N) + 1
         N_2 = round(segment_2_fraction * N) + 1
-        N_3 = round(segment_3_fraction * N) + 1   
+        N_3 = round(segment_3_fraction * N) + 1
 
         #print(N_1, N_2, N_3)
 
@@ -97,7 +97,7 @@ def MonteCarlo(N, iterations, point_list):
 
             if pure_random(150, 250) in segment_2_points:
                 correct_2 += 1
-        
+
         segment_2_fraction = correct_2/N_2
         surface_2 = (101*0.005*200*0.005) * segment_2_fraction
 
@@ -112,23 +112,20 @@ def MonteCarlo(N, iterations, point_list):
         # print(surface_1, surface_2, surface_3)
         # print(surface_1 + surface_2 + surface_3)
 
-    
+
     surface = surface_1 + surface_2 + surface_3
 
     return surface*2
 
-points = point_list(150)
+points = point_list(max_iterations[0])
 areas = []
+x_list = [i for i in range(400)]
 
-for i in range(200):
-    print(i)
+for i in range(400):
+    # print(i)
     for _ in range(1):
         area = MonteCarlo(i, 5, points)
-        plt.plot(i, area, 'ro')
-
+        areas.append(area)
+        # plt.plot(i, area, 'ro')
+plt.plot(x_list, areas)
 plt.show()
-
-
-
-
-
