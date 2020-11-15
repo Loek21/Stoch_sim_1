@@ -60,72 +60,68 @@ def pure_random(px_start, px_end):
     random_y = random.randint(200, 400)
     return (random_x, random_y)
 
-def MonteCarlo(N, iterations, point_list):
+def MonteCarlo(iterations, point_list):
 
     # get all the mandelbrot points of the specific segments
     segment_1_points, segment_2_points, segment_3_points = point_list
-
+    total_points = len(segment_1_points) + len(segment_2_points) + len(segment_3_points)
     # implement bias based on the fraction of correct points
-    segment_1_fraction = 0.077 #28
-    segment_2_fraction = 0.278 #101
-    segment_3_fraction = 1 - segment_1_fraction - segment_2_fraction #234
+    segment_1_fraction = len(segment_1_points)/total_points
+    segment_2_fraction = len(segment_2_points)/total_points
+    #segment_3_fraction = len(segment_3_points)/total_points
 
     surface_1 = 0
     surface_2 = 0
     surface_3 = 0
 
+    N_1 = 1
+    N_2 = 1
+    N_3 = 1
+
+    correct_1 = 0
+    correct_2 = 0
+    correct_3 = 0
+
+    surface_list = []
+
     for _ in range(iterations):
-        N_1 = round(segment_1_fraction * N) + 1
-        N_2 = round(segment_2_fraction * N) + 1
-        N_3 = round(segment_3_fraction * N) + 1
 
-        #print(N_1, N_2, N_3)
+        surface_1 = (28*0.005*200*0.005) * correct_1 / N_1
+        surface_2 = (101*0.005*200*0.005) * correct_2 / N_2
+        surface_3 = (234*0.005*200*0.005) * correct_3 / N_3
+        surface = surface_1 + surface_2 + surface_3
+        surface_list.append(2*surface)
 
-        correct_1 = 0
-        correct_2 = 0
-        correct_3 = 0
-
-        for _ in range(N_1):
+        random = np.random.uniform(0,1)
+                
+        if random < segment_1_fraction:
+            N_1 += 1
 
             if pure_random(121, 149) in segment_1_points:
                 correct_1 += 1
 
-        segment_1_fraction = correct_1/N_1
-        surface_1 = (28*0.005*200*0.005) * segment_1_fraction
-
-        for _ in range(N_2):
+        elif random > segment_1_fraction and random < segment_1_fraction + segment_2_fraction:
+            N_2 += 1
 
             if pure_random(150, 250) in segment_2_points:
                 correct_2 += 1
-
-        segment_2_fraction = correct_2/N_2
-        surface_2 = (101*0.005*200*0.005) * segment_2_fraction
-
-        for _ in range(N_3):
+        
+        else:
+            N_3 += 1
 
             if pure_random(251, 484) in segment_3_points:
                 correct_3 += 1
 
-        segment_3_fraction = correct_3/N_3
-        surface_3 = (234*0.005*200*0.005) * segment_3_fraction
+    return np.array(surface_list)
 
-        # print(surface_1, surface_2, surface_3)
-        # print(surface_1 + surface_2 + surface_3)
-
-
-    surface = surface_1 + surface_2 + surface_3
-
-    return surface*2
-
-points = point_list(max_iterations[0])
+points = point_list(150)
 areas = []
-x_list = [i for i in range(400)]
 
-for i in range(400):
-    # print(i)
-    for _ in range(1):
-        area = MonteCarlo(i, 5, points)
-        areas.append(area)
-        # plt.plot(i, area, 'ro')
-plt.plot(x_list, areas)
+
+for _ in range(5):
+    area = MonteCarlo(201, points)
+
+
+plt.plot(np.arange(0,201,1), area)
+
 plt.show()
