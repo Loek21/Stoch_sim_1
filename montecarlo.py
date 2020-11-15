@@ -4,10 +4,10 @@ from PIL import Image, ImageDraw
 import random
 
 max_iterations = [100, 500, 1000, 2500]
-repeats = [2]
-N_samples = [100,1000,10000,100000]
-width = 400
-height = 400
+repeats = [100]
+N_samples = [100,1000,10000]
+# width = 400
+# height = 400
 type = "ortho"
 
 x_start = -1.79
@@ -54,26 +54,29 @@ def pure_random():
     return (random_x, random_y)
 
 def hypercube(pointlist, height, width):
-    choice_list = [i for i in range(width)]
+    sub_size = int(np.sqrt(width))**2
+    width_list = [i for i in range(sub_size)]
+    height_list = [i for i in range(sub_size)]
     correct = 0
-    for i in range(height):
-        random_int = random.choice(choice_list)
-        choice_list.remove(random_int)
-        if (random_int, i) in pointlist:
+    for i in range(sub_size):
+        random_height = random.choice(height_list)
+        random_width = random.choice(width_list)
+        if (random_width, random_height) in pointlist:
             correct += 1
-
+        height_list.remove(random_height)
+        width_list.remove(random_width)
     return correct
 
 def orthogonal(pointlist, height, width):
     sub_size = int(np.sqrt(width))
     grid_list = []
-    for i in np.arange(0, width, sub_size):
-        for j in np.arange(0, height, sub_size):
+    for i in np.arange(0, sub_size**2, sub_size):
+        for j in np.arange(0, sub_size**2, sub_size):
             grid_list.append((i,j))
-    height_list = [i for i in range(height)]
-    width_list = [i for i in range(width)]
+    height_list = [i for i in range(sub_size**2)]
+    width_list = [i for i in range(sub_size**2)]
     correct = 0
-    for i in range(width):
+    for i in range(sub_size**2):
         grid = random.choice(grid_list)
         height_range = np.logical_and(height_list >= grid[1], height_list < grid[1] + sub_size)
         height_ind = np.where(height_range)[0]
@@ -171,19 +174,21 @@ def MonteCarlo(pointlist, N, type, height, width):
 
 
 if type == "hyper":
-    N = height
-    saved_points = point_list(max_iterations)
     file_aux  = open(f'results_{type}.csv','a')
-    file_aux.write("Repeats,N_points,Mean_surface,Std_surface")
-    for repeat in repeats:
+    file_aux.write("Type,Iterations,N_points,Mean_surface,Std_surface,Confidence_radius")
+    for iterations in max_iterations:
+        for dim in N_samples:
+            saved_points = point_list(iterations, dim, dim)
+            surface_list = []
+            N = int(np.sqrt(dim)) * int(np.sqrt(dim))
+            for i in range(repeats[0]):
+                surface, correct = MonteCarlo(saved_points, N, type, dim, dim)
+                surface_list.append(surface)
 
-        surface_list = []
-        for i in range(repeat):
-            surface, correct = MonteCarlo(saved_points, N, type, 0)
-            surface_list.append(surface)
-        mean = np.mean(surface_list)
-        std = np.std(surface_list)
-        file_aux.write("\n"+str(repeat)+","+str(N)+","+str(mean)+","+str(std))
+            mean = np.mean(surface_list)
+            std = np.std(surface_list)
+            conf = (1.96*std)/np.sqrt(repeats[0])
+            file_aux.write("\n"+str(N)+","+str(mean)+","+str(std)+","+str(conf))
 
     file_aux.close()
 
@@ -218,7 +223,7 @@ if type == "hyper":
 if type == "ortho":
 
     file_aux  = open(f'results_{type}.csv','a')
-    file_aux.write("Type,Iterations,N_points,Mean_surface,Std_surface,Confidence_radius")
+    file_aux.write("Iterations,N_points,Mean_surface,Std_surface,Confidence_radius")
     for iterations in max_iterations:
         for dim in N_samples:
             saved_points = point_list(iterations, dim, dim)
@@ -227,9 +232,10 @@ if type == "ortho":
             for i in range(repeats[0]):
                 surface, correct = MonteCarlo(saved_points, N, type, dim, dim)
                 surface_list.append(surface)
+                print(f"{iterations}, {dim}, {i}")
             mean = np.mean(surface_list)
             std = np.std(surface_list)
             conf = (1.96*std)/np.sqrt(repeats[0])
-            file_aux.write("\n"+str(N)+","+str(mean)+","+str(std)+","+str(conf))
+            file_aux.write("\n"+str(iterations)+","+str(N)+","+str(mean)+","+str(std)+","+str(conf))
 
     file_aux.close()
