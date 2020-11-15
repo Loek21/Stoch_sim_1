@@ -118,10 +118,23 @@ points = point_list(150)
 areas = []
 
 
-for _ in range(5):
-    area = MonteCarlo(201, points)
+# for _ in range(5):
+#     area = MonteCarlo(201, points)
 
 
-plt.plot(np.arange(0,201,1), area)
+# plt.plot(np.arange(0,201,1), area)
 
+# plt.show()
+
+surface_r_arr = np.zeros((30, 801))
+
+for i in range(30):
+    
+    surface_r_arr[i] = MonteCarlo(801, points)
+
+mean_r = np.mean(surface_r_arr, axis=0)
+std_r = np.std(surface_r_arr, axis=0)
+N_list = [i for i in range(801)]
+plt.plot(N_list, mean_r, label="Random")
+plt.fill_between(N_list, mean_r+std_r, mean_r-std_r, alpha=0.2)
 plt.show()
