@@ -5,7 +5,7 @@ import random
 
 max_iterations = [100, 500, 1000, 2500]
 repeats = [100]
-N_samples = [100,1000,10000,100000]
+N_samples = [100,1000,10000]
 
 x_start = -1.79
 x_end = 0.47
@@ -29,23 +29,33 @@ def circle(r, x, y, x_centre):
 
     return False
 
-def hypercube(height, width, max):
-    sub_size = int(np.sqrt(width))**2
-    width_list = [i for i in range(sub_size)]
-    height_list = [i for i in range(sub_size)]
+def orthogonal(height, width, max):
+    sub_size = int(np.sqrt(width))
+    grid_list = []
+    for i in np.arange(0, sub_size**2, sub_size):
+        for j in np.arange(0, sub_size**2, sub_size):
+            grid_list.append((i,j))
+    height_list = [i for i in range(sub_size**2)]
+    width_list = [i for i in range(sub_size**2)]
     correct = 0
     correct_circle = 0
     correct_cardioid = 0
-    for height in height_list:
-        # random_height = random.choice(height_list)
-        random_width = random.choice(width_list)
-        real_number = x_start + (random_width/sub_size) * (x_end-x_start)
-        imag_number = y_start + (height/sub_size) * (y_end-y_start)
+    for grid in grid_list:
+        height_range = np.logical_and(height_list >= grid[1], height_list < grid[1] + sub_size)
+        height_ind = np.where(height_range)[0]
+        height_pos = random.choice(height_ind)
+        random_height = int(height_list[height_pos])
+        width_range = np.logical_and(width_list >= grid[0], width_list < grid[0] + sub_size)
+        width_ind = np.where(width_range)[0]
+        width_pos = random.choice(width_ind)
+        random_width = int(width_list[width_pos])
+        real_number = x_start + (random_width/sub_size**2) * (x_end-x_start)
+        imag_number = y_start + (random_height/sub_size**2) * (y_end-y_start)
         complex_number = real_number + imag_number*1j
         iterations = mandelbrot(complex_number, max)
         if iterations == max:
             correct += 1
-        # height_list.remove(random_height)
+        height_list.remove(random_height)
         width_list.remove(random_width)
 
         if circle(0.6, real_number, imag_number, -0.2):
@@ -57,7 +67,7 @@ def hypercube(height, width, max):
 
 def MonteCarlo(N, height, width, max):
 
-    correct, correct_cardioid, correct_circle = hypercube(height, width, max)
+    correct, correct_cardioid, correct_circle = orthogonal(height, width, max)
 
     surface = ((abs(x_start) + abs(x_end))*(abs(y_start) + abs(y_end))) * correct/N
 
@@ -96,7 +106,7 @@ def analysis(mandelbrot_areas, circle_areas, N):
 
 
 
-file_aux  = open(f'results_controlvar.csv','a')
+file_aux  = open(f'results_controlvarorth.csv','a')
 file_aux.write("Iterations,N_points,Mean_surface,Std_surface,Confidence_radius")
 for iterations in max_iterations:
     for dim in N_samples:
